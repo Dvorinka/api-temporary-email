@@ -1,0 +1,227 @@
+openapi: 3.0.3
+info:
+  title: Temporary Email Detection API
+  description: API for detecting temporary/disposable email addresses and assessing email risk
+  version: 1.0.0
+  contact:
+    name: API Services
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8088
+    description: Development server
+  - url: https://api.example.com
+    description: Production server
+
+paths:
+  /healthz:
+    get:
+      summary: Health check endpoint
+      description: Returns the health status of the service
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /v1/tempemail/check:
+    post:
+      summary: Check email address
+      description: Analyze a single email address for temporary/disposable detection and risk assessment
+      tags:
+        - Email Detection
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckInput'
+      responses:
+        '200':
+          description: Successful email check response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CheckResult'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '405':
+          description: Method not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/tempemail/check/batch:
+    post:
+      summary: Batch check email addresses
+      description: Analyze multiple email addresses for temporary/disposable detection and risk assessment
+      tags:
+        - Email Detection
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchCheckInput'
+      responses:
+        '200':
+          description: Successful batch check response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CheckResult'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '405':
+          description: Method not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    CheckInput:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          description: Email address to check
+          example: "user@example.com"
+
+    BatchCheckInput:
+      type: object
+      required:
+        - emails
+      properties:
+        emails:
+          type: array
+          description: Array of email addresses to check
+          minItems: 1
+          maxItems: 100
+          items:
+            type: string
+          example: ["user@example.com", "temp@10minutemail.com"]
+
+    CheckResult:
+      type: object
+      properties:
+        email:
+          type: string
+          description: Original email address
+          example: "user@example.com"
+        normalized_email:
+          type: string
+          description: Normalized (lowercase, trimmed) email address
+          example: "user@example.com"
+        domain:
+          type: string
+          description: Domain part of the email address
+          example: "example.com"
+        valid_format:
+          type: boolean
+          description: Whether the email format is valid
+          example: true
+        is_disposable:
+          type: boolean
+          description: Whether the email is from a known disposable email provider
+          example: false
+        known_spam_provider:
+          type: boolean
+          description: Whether the email is from a known spam-associated provider
+          example: false
+        domain_created_at:
+          type: string
+          format: date-time
+          description: Domain creation date (if available)
+          example: "2010-01-01T00:00:00Z"
+        domain_age_days:
+          type: integer
+          description: Domain age in days (if available)
+          example: 4748
+        domain_age_available:
+          type: boolean
+          description: Whether domain age information is available
+          example: true
+        risk_score:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Risk score (0-100, higher is riskier)
+          example: 5
+        risk_level:
+          type: string
+          enum: [low, medium, high]
+          description: Risk level classification
+          example: "low"
+        risk_reasons:
+          type: array
+          description: Reasons for the risk assessment
+          items:
+            type: string
+          example: ["domain younger than 30 days"]
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "email is required"
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: API key for authentication (format: "Bearer YOUR_API_KEY")
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: Email Detection
+    description: Temporary email detection and risk assessment
