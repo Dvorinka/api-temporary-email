@@ -18,7 +18,7 @@ import (
 func main() {
 	logger := log.New(os.Stdout, "[tempemail] ", log.LstdFlags)
 
-	port := envString("PORT", "8088")
+	port := envString("PORT", "30016")
 	apiKey := envString("TEMPMAIL_API_KEY", "dev-tempmail-key")
 	cacheSeconds := envInt("TEMPMAIL_CACHE_SECONDS", 1800)
 	if apiKey == "dev-tempmail-key" {
