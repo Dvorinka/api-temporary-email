@@ -1,4 +1,4 @@
-module temporary-email
+module apiservices/temporary-email
 
 go 1.25.7
 
